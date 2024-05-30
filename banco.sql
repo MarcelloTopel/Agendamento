@@ -1,10 +1,12 @@
+-- Criação do banco de dados
 CREATE DATABASE agendamento;
 USE agendamento;
 
+-- Tabela de Serviços
 CREATE TABLE Servicos (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(50) NOT NULL
-);
+) COMMENT 'Tabela contendo os tipos de serviços oferecidos';
 
 INSERT INTO Servicos (Nome) VALUES
 ('Consulta'),
@@ -14,23 +16,24 @@ INSERT INTO Servicos (Nome) VALUES
 ('Cirurgia'),
 ('Exames Hematológicos');
 
+-- Tabela de Animais
 CREATE TABLE Animais (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(50) NOT NULL,
-    Idade INT CHECK (Idade >= 0),
-    Peso DECIMAL(10,2) CHECK (Peso > 0),
-    Tipo VARCHAR(20) NOT NULL,
-    Tutor VARCHAR(100) NOT NULL,
-    Telefone VARCHAR(20) NOT NULL
-);
+    Idade INT,
+    Peso DECIMAL(10,2),
+    Tipo VARCHAR(20),
+    Tutor VARCHAR(100),
+    Telefone VARCHAR(20)
+) COMMENT 'Tabela contendo as informações dos animais';
 
+-- Tabela de Horários
 CREATE TABLE Horarios (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    DiaSemana ENUM('Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo') NOT NULL,
+    DiaSemana ENUM('Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado') NOT NULL,
     HoraInicio TIME NOT NULL,
-    HoraFim TIME NOT NULL,
-    CHECK (HoraInicio < HoraFim)
-);
+    HoraFim TIME NOT NULL
+) COMMENT 'Tabela contendo os horários disponíveis para agendamento';
 
 INSERT INTO Horarios (DiaSemana, HoraInicio, HoraFim) VALUES
 ('Segunda', '14:00:00', '17:00:00'),
@@ -39,37 +42,27 @@ INSERT INTO Horarios (DiaSemana, HoraInicio, HoraFim) VALUES
 ('Quinta', '14:00:00', '17:00:00'),
 ('Sexta', '14:00:00', '17:00:00');
 
+-- Tabela de Agendamentos
 CREATE TABLE Agendamentos (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     Data DATE NOT NULL,
     HorarioID INT NOT NULL,
     AnimalID INT NOT NULL,
     ServicoID INT NOT NULL,
-    Confirmacao BOOLEAN NOT NULL,
+    Confirmacao BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (HorarioID) REFERENCES Horarios(ID),
     FOREIGN KEY (AnimalID) REFERENCES Animais(ID),
-    FOREIGN KEY (ServicoID) REFERENCES Servicos(ID),
-    UNIQUE (Data, HorarioID, AnimalID)
-);
+    FOREIGN KEY (ServicoID) REFERENCES Servicos(ID)
+) COMMENT 'Tabela contendo os agendamentos realizados';
 
+-- Tabela de Bloqueios de Horários
 CREATE TABLE Block (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     Data DATE NOT NULL,
     HorarioID INT NOT NULL,
-    FOREIGN KEY (HorarioID) REFERENCES Horarios(ID),
-    UNIQUE (Data, HorarioID)
-);
+    FOREIGN KEY (HorarioID) REFERENCES Horarios(ID)
+) COMMENT 'Tabela contendo os horários bloqueados para agendamentos';
 
--- Adicionar índices para melhorar a performance das consultas
-CREATE INDEX idx_animal_nome ON Animais (Nome);
-CREATE INDEX idx_tutor_nome ON Animais (Tutor);
-CREATE INDEX idx_servico_nome ON Servicos (Nome);
-CREATE INDEX idx_agendamento_data ON Agendamentos (Data);
-CREATE INDEX idx_block_data ON Block (Data);
-
-
-SELECT * FROM Servicos;
-SELECT * FROM Animais;
-SELECT * FROM Horarios;
-SELECT * FROM Agendamentos;
-SELECT * FROM Block;
+-- Criação de índices para melhorar a performance nas buscas
+CREATE INDEX idx_data_horario ON Agendamentos (Data, HorarioID);
+CREATE INDEX idx_data_block ON Block (Data, HorarioID);
